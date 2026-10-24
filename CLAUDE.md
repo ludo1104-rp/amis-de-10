@@ -5,7 +5,7 @@ Compléments à 10 avec le cadre de 10. Code couleur : bleu = le nombre donné,
 orange = son ami (ce qui manque pour faire 10).
 
 ## État
-- 1.0 du 24/10/2026 : reconstruite sur le gabarit de la skill à partir de
+- 1.0 publiée le 24/10/2026 (dépôt public ludo1104-rp/amis-de-10, GitHub Pages) : reconstruite sur le gabarit de la skill à partir de
   l'artefact « Les compléments de 10 » (`_a-trier/artefacts/complements-de-10/`).
 - Jeux : Apprendre, Trouve l'ami, Les paires, Le labyrinthe, Mes calculs
   difficiles, Mes progrès. Ouverture animée, styles Couleurs/Simple, 3 tailles.
