@@ -235,6 +235,10 @@ body.simple{--bleu-txt:#1C64B4;--orange-txt:#B4461F}
 .answers.pad .choice::after{right:8px;font-size:18px}
 
 /* Les paires */
+.q-label.histoire{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px 18px;max-width:620px;margin:0 auto;text-align:left}
+.eq.petit{font-size:clamp(34px,6vw,48px)}
+.eq-txt{font-size:.6em}
+.maze.trois .cell{font-size:clamp(14px,2.1vw,20px)}
 .paires{display:grid;gap:12px;grid-template-columns:repeat(var(--cols,4),1fr);width:100%;max-width:620px;margin:0 auto}
 .paires .choice.num{aspect-ratio:1;border-radius:28px;font-size:clamp(40px,7vw,56px);padding:0;min-height:0}
 .paires .choice.sel{border-color:var(--sel);background:var(--sel-bg);color:var(--ink);transform:translateY(-4px)}
@@ -364,7 +368,7 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
 const APP={
   titre:'Les amis de 10',
   sousTitre:'Deux nombres qui font 10 ensemble.',
-  version:'1.0',                     // +0.1 à chaque publication
+  version:'1.1',                     // +0.1 à chaque publication
   sourceInternet:false,              // pas de document de départ
   sourceAutre:'',
   cle:'amis-de-10'                   // préfixe localStorage — NE PLUS LE CHANGER après la 1re publication
@@ -378,16 +382,33 @@ const APP={
    ===================================================================== */
 const AMIS=[0,1,2,3,4,5,6,7,8,9,10];
 const PAIRES=[0,1,2,3,4,5];
-const NB_QUESTIONS=10;   // questions par partie de « Trouve l'ami »
-const NB_LIGNES=6;       // lignes par partie de « Les paires » (les 6 paires, une fois chacune)
+const NB_QUESTIONS={'1':12,'2':15,'3':20};   // questions par partie de « Trouve l'ami », selon le défi
+const NB_LIGNES={'1':6,'2':8,'3':10};        // lignes par partie de « Les paires », selon le défi
 
 /* Défis (critère objectif) :
    - Trouve l'ami : Petit = cadre de 10 affiché + 3 choix ; Moyen = 3 choix, cadre si on demande de l'aide ;
      Grand = tous les nombres de 0 à 10, cadre si on demande de l'aide.
-   - Les paires : Petit = 4 nombres ; Moyen = 6 nombres ; Grand = 8 nombres.
-   - Le labyrinthe : Petit = 3 × 4 cases ; Moyen = 4 × 5 cases ; Grand = 5 × 6 cases. */
-const PAIRES_NB={'1':4,'2':6,'3':8};
-const LABY={'1':[3,4],'2':[4,5],'3':[5,6]};
+     Sortes de calculs (TYPES_COMP) : 7 + ? = 10 · ? + 7 = 10 · 10 = 7 + ? · 10 − 7 = ? ·
+     petite histoire · 70 + ? = 100 (la clé reste 'c:7' : c'est le même ami).
+   - Les paires : Petit = 4 nombres ; Moyen = 6 nombres ; Grand = 9 nombres.
+   - Le labyrinthe : Petit = 4 × 4 cases ; Moyen = 5 × 5 cases ; Grand = 6 × 6 cases avec des calculs à 3 nombres. */
+const TYPES_COMP={'1':['droite','gauche','egal'],'2':['droite','gauche','egal','moins','histoire'],'3':['gauche','egal','moins','histoire','cent']};
+const PAIRES_NB={'1':4,'2':6,'3':9};
+const LABY={'1':[4,4],'2':[5,5],'3':[6,6]};
+
+/* Petites histoires (nombre de 1 à 9). {a} = le nombre donné ; {un|plusieurs} = accord selon {a}. */
+const HISTOIRES=[
+  'Tu as {a} {bille|billes}. Tu veux 10 billes. Combien de billes te manque-t-il ?',
+  'Le bus a 10 places. {a} {place est prise|places sont prises}. Combien de places sont libres ?',
+  'Une boîte peut contenir 10 œufs. Il y a {a} {œuf|œufs} dedans. Combien d’œufs manque-t-il ?',
+  'Tu as {a} {euro|euros}. Le livre coûte 10 euros. Combien d’euros te manque-t-il ?',
+  'L’équipe a 10 joueurs. {a} {joueur est arrivé|joueurs sont arrivés}. Combien de joueurs vont encore arriver ?',
+  'Tu dois lire 10 pages. Tu as lu {a} {page|pages}. Combien de pages te reste-t-il ?',
+  'Tu as 10 doigts. Tu lèves {a} {doigt|doigts}. Combien de doigts sont baissés ?',
+  'Le gâteau a 10 parts. On a mangé {a} {part|parts}. Combien de parts reste-t-il ?',
+  'Il y a 10 chaises autour de la table. {a} {chaise est rangée|chaises sont rangées}. Combien de chaises faut-il encore ranger ?',
+  'Tu dois faire 10 exercices. Tu as fini {a} {exercice|exercices}. Combien d’exercices te reste-t-il ?'
+];
 
 /* Lignes FALC de l'accueil : [icône, phrase courte] */
 const ACCUEIL_LIGNES=[
@@ -705,43 +726,66 @@ function montrerAmi(a){
 function choixPour(a){const b=10-a;
   const autres=shuffle([b-1,b+1,b-2,b+2,a].filter((x,i,t)=>x>=0&&x<=10&&x!==b&&t.indexOf(x)===i));
   return shuffle([b,autres[0],autres[1]]);}
+function texteHistoire(t,a){return t.replace(/\{a\}/g,a).replace(/\{([^|}]*)\|([^}]*)\}/g,(m,un,pl)=>a>1?pl:un);}
+/* Une partie : chaque ami au moins une fois, puis on recommence la liste ; les sortes de calculs tournent. */
+function questionsComp(ids,d){
+  const types=TYPES_COMP[d];let pile=[];
+  return ids.map(a=>{
+    if(!pile.length)pile=shuffle(types);
+    let t=pile.shift();
+    if(t==='histoire'&&(a===0||a===10))t=types[0];
+    return {a:a,t:t,h:t==='histoire'?HISTOIRES[rnd(HISTOIRES.length)]:''};
+  });
+}
 function startComp(revoir){
-  const ids=revoir?shuffle(difficilesC().map(k=>+k.slice(2))).slice(0,NB_QUESTIONS):piocheIds('complement',AMIS,NB_QUESTIONS);
+  const d=defiActuel(),n=NB_QUESTIONS[d];
+  let ids;
+  if(revoir)ids=shuffle(difficilesC().map(k=>+k.slice(2))).slice(0,n);
+  else{ids=[];while(ids.length<n){const lot=piocheIds('complement',AMIS,Math.min(AMIS.length,n-ids.length));
+    if(ids.length&&lot.length>1&&lot[0]===ids[ids.length-1])lot.push(lot.shift());ids=ids.concat(lot);}}
   if(!ids.length)return renderHome();
-  S.sess={revoir:!!revoir,qs:ids.map(a=>({a:a,gauche:Math.random()<.5})),i:0,score:0,serie:0,ko:[],defi:defiActuel()};
+  S.sess={revoir:!!revoir,qs:questionsComp(ids,d),i:0,score:0,serie:0,ko:[],defi:d};
   renderComp();
 }
 function renderComp(){
-  const s=S.sess,q=s.qs[s.i],a=q.a,b=10-a,d=s.defi;
-  const ecoute=()=>say(q.gauche?a+' plus combien égale 10 ?':'Combien plus '+a+' égale 10 ?');
+  const s=S.sess,q=s.qs[s.i],a=q.a,b=10-a,d=s.defi,t=q.t;
+  const f=t==='cent'?10:1,A=a*f,B=b*f,T=10*f;   /* « cent » : 70 + 30 = 100 */
+  const histoire=t==='histoire'?texteHistoire(q.h,a):'';
+  const label=t==='histoire'?histoire:t==='moins'?'Combien font 10 moins '+a+' ?':'Quel nombre manque pour faire '+T+' ?';
+  const ecoute=()=>say(t==='histoire'?histoire:t==='moins'?'10 moins '+a+' égale combien ?':t==='egal'?T+' égale '+A+' plus combien ?':t==='gauche'?'Combien plus '+A+' égale '+T+' ?':A+' plus combien égale '+T+' ?');
   header({segs:[s.i,s.qs.length],streak:s.serie,listen:ecoute});
-  window.__appli.bonneReponse=String(b); /* crochet pour les tests automatiques */
-  const box='<span class="box" id="box">?</span>';
-  const eq=q.gauche?bleu(a)+'<span>+</span>'+box:box+'<span>+</span>'+bleu(a);
-  const nums=d==='3'?AMIS:choixPour(a);
+  window.__appli.bonneReponse=String(B); /* crochet pour les tests automatiques */
+  const box='<span class="box" id="box">?</span>',ega='<span>=</span>';
+  const eq=t==='gauche'?box+'<span>+</span>'+bleu(A)+ega+'<span>'+T+'</span>':
+    t==='egal'?'<span>'+T+'</span>'+ega+bleu(A)+'<span>+</span>'+box:
+    t==='moins'?'<span>10</span><span>−</span>'+bleu(A)+ega+box:
+    t==='histoire'?'<span class="eq-txt">Réponse :</span>'+box:
+    bleu(A)+'<span>+</span>'+box+ega+'<span>'+T+'</span>';
+  const nums=(d==='3'?AMIS:choixPour(a)).map(x=>x*f);
+  const noteAide=pluriel(a,'point')+' '+(a>1?'bleus':'bleu')+'. Compte les cases vides.'+(f===10?'<br>Chaque point vaut 10.':'');
   view('<span class="badge">'+(s.revoir?'À revoir · ':'')+'Question '+(s.i+1)+' sur '+s.qs.length+'</span>'+
-    '<p class="q-label">Quel nombre manque pour faire 10 ?</p>'+
-    '<div class="eq">'+eq+'<span>=</span><span>10</span></div>'+
+    '<p class="q-label'+(t==='histoire'?' histoire':'')+'">'+esc(label)+'</p>'+
+    '<div class="eq'+(t==='histoire'?' petit':'')+'">'+eq+'</div>'+
     '<div class="tf-zone" id="tfz">'+(d==='1'?cadre(a,{anim:true}):'')+'</div>'+
     '<div class="answers '+(d==='3'?'pad':'trois')+'">'+nums.map(n=>'<button type="button" class="choice num" data-rep="'+n+'">'+n+'</button>').join('')+'</div>'+
-    (d!=='1'?'<div class="actions inline" id="aide"><button type="button" class="btn" id="aideBtn">Besoin d\u2019aide ?</button></div>':''));
+    (d!=='1'?'<div class="actions inline" id="aide"><button type="button" class="btn" id="aideBtn">Besoin d’aide ?</button></div>':''));
   const aide=$('#aideBtn');
-  if(aide)aide.addEventListener('click',()=>{$('#tfz').innerHTML=cadre(a,{anim:true})+'<p class="note">'+pluriel(a,'point')+' '+(a>1?'bleus':'bleu')+'. Compte les cases vides.</p>';$('#aide').remove();});
+  if(aide)aide.addEventListener('click',()=>{$('#tfz').innerHTML=cadre(a,{anim:true})+'<p class="note">'+noteAide+'</p>';$('#aide').remove();});
   $$('.choice',main).forEach(btn=>btn.addEventListener('click',()=>{
-    const n=+btn.dataset.rep,juste=n===b,cle='c:'+a;
-    const calc=(q.gauche?a+' + '+b:b+' + '+a)+' = 10';
-    $$('.choice',main).forEach(x=>{x.disabled=true;if(+x.dataset.rep===b)x.classList.add('ok');else if(x!==btn)x.classList.add('dim');});
+    const n=+btn.dataset.rep,juste=n===B,cle='c:'+a;
+    const calc=t==='moins'?'10 − '+a+' = '+b:t==='gauche'?B+' + '+A+' = '+T:A+' + '+B+' = '+T;
+    $$('.choice',main).forEach(x=>{x.disabled=true;if(+x.dataset.rep===B)x.classList.add('ok');else if(x!==btn)x.classList.add('dim');});
     const bx=$('#box');bx.textContent=n;bx.classList.add(juste?'ok':'ko');
     if($('#aide'))$('#aide').remove();
     /* Le cadre montre l'ami : les cases vides se remplissent en orange */
     $('#tfz').innerHTML=cadre(a,{anim:!$('#tfz .tf')});
     remplirAmi($('#tfz .tf'));
     if(juste){btn.classList.add('pop');s.score++;s.serie++;noterReussite(cle);if(s.revoir)retirerDifficile(cle);
-      $('#tfz').insertAdjacentHTML('beforeend','<p class="note">'+bleu(a)+' + '+orange(b)+' = 10</p>');}
+      $('#tfz').insertAdjacentHTML('beforeend','<p class="note">'+bleu(A)+' + '+orange(B)+' = '+T+'</p>');}
     else{btn.classList.add('ko','shake');s.serie=0;if(s.ko.indexOf(calc)<0)s.ko.push(calc);noterErreur(cle);
-      $('#tfz').insertAdjacentHTML('beforeend','<p class="note">Avec '+n+' : '+a+' + '+n+' = '+(a+n)+'. '+(a+n>10?'C\u2019est trop':'Ce n\u2019est pas assez')+'.<br>Il manque '+orange(b)+' pour faire 10.</p>');}
+      $('#tfz').insertAdjacentHTML('beforeend','<p class="note">Avec '+n+' : '+A+' + '+n+' = '+(A+n)+'. '+(A+n>T?'C’est trop':'Ce n’est pas assez')+'.<br>Il manque '+orange(B)+' pour faire '+T+'.</p>');}
     header({segs:[s.i+1,s.qs.length],streak:s.serie,listen:ecoute});
-    showSheet(juste,juste?'Bravo !':'Pas tout à fait',juste?calc+'.':'La réponse est '+b+'. '+calc+'.',()=>{s.i++;if(s.i<s.qs.length)renderComp();else finComp();});
+    showSheet(juste,juste?'Bravo !':'Pas tout à fait',juste?calc+'.':'La réponse est '+B+'. '+calc+'.',()=>{s.i++;if(s.i<s.qs.length)renderComp();else finComp();});
   }));
 }
 function finComp(){const s=S.sess;
@@ -754,7 +798,8 @@ function ligneDePaires(p,nb){
     if(c===1)return shuffle(row);}}
 function startPaires(){
   const d=defiActuel();
-  S.sess={lignes:piocheIds('paires',PAIRES,NB_LIGNES).map(p=>({p:p,nums:ligneDePaires(p,PAIRES_NB[d])})),i:0,score:0,serie:0,ko:[]};
+  const n=NB_LIGNES[d];let ids=[];while(ids.length<n)ids=ids.concat(piocheIds('paires',PAIRES,Math.min(PAIRES.length,n-ids.length)));
+  S.sess={lignes:ids.map(p=>({p:p,nums:ligneDePaires(p,PAIRES_NB[d])})),i:0,score:0,serie:0,ko:[]};
   renderPaires();
 }
 function renderPaires(){
@@ -766,7 +811,7 @@ function renderPaires(){
   header({segs:[s.i,s.lignes.length],streak:s.serie,listen:()=>say(consigne)});
   view('<span class="badge">Ligne '+(s.i+1)+' sur '+s.lignes.length+'</span>'+
     '<p class="q-label">'+consigne+'</p>'+
-    '<div class="paires" style="--cols:'+(nb===6?3:4)+'">'+nums.map((n,k)=>'<button type="button" class="choice num" data-k="'+k+'">'+n+'</button>').join('')+'</div>'+
+    '<div class="paires" style="--cols:'+(nb%3===0?3:4)+'">'+nums.map((n,k)=>'<button type="button" class="choice num" data-k="'+k+'">'+n+'</button>').join('')+'</div>'+
     '<div class="dnd-msg" id="msg" role="status" hidden></div><div class="tf-zone" id="tfz"></div>');
   const btns=$$('.choice',main);
   const suite=()=>{s.i++;if(s.i<s.lignes.length)renderPaires();else finPaires();};
@@ -810,17 +855,20 @@ function finPaires(){const s=S.sess,n=s.lignes.length;
     ligne:pluriel(s.score,'paire')+' '+(s.score>1?'trouvées':'trouvée')+' du premier coup sur '+n+'.'});}
 
 /* ---------- Le labyrinthe : passer seulement par les calculs qui font 10 ---------- */
+/* Nombres (de 0 à 10) dont la somme vaut t : 2 nombres, ou 3 nombres (sans 0) au grand défi */
+function termes(t,trois){
+  for(;;){if(!trois){const a=rnd(11),b=t-a;if(b>=0&&b<=10)return [a,b];}
+    else{const a=1+rnd(8),b=1+rnd(8),c=t-a-b;if(c>=1&&c<=8)return [a,b,c];}}}
 function startLaby(){
   const R=LABY[defiActuel()][0],C=LABY[defiActuel()][1];
   const pas=shuffle(Array(C-1).fill('d').concat(Array(R-1).fill('b')));
   const chemin=['0,0'];let r=0,c=0;pas.forEach(m=>{if(m==='d')c++;else r++;chemin.push(r+','+c);});
-  const cases=[];
+  const cases=[],trois=defiActuel()==='3';
   for(let y=0;y<R;y++)for(let x=0;x<C;x++){
     const k=y+','+x;let cl;
     if(!y&&!x)cl={type:'depart'};
     else if(y===R-1&&x===C-1)cl={type:'arrivee'};
-    else if(chemin.indexOf(k)>=0){const a=rnd(11);cl={type:'op',a:a,b:10-a};}
-    else{const t=Math.random()<.5?9:11,a=t===9?rnd(10):1+rnd(10);cl={type:'op',a:a,b:t-a};}
+    else{const t=chemin.indexOf(k)>=0?10:Math.random()<.5?9:11;cl={type:'op',n:termes(t,trois&&Math.random()<.5)};}
     cl.k=k;cases.push(cl);
   }
   S.sess={R:R,C:C,cases:cases,trace:['0,0'],err:0,ko:[],fini:false};
@@ -828,8 +876,8 @@ function startLaby(){
   const consigne='Va du départ à l\u2019arrivée. Touche seulement les calculs qui font 10.';
   header({title:'Le labyrinthe',listen:()=>say(consigne)});
   view('<p class="q-label">'+consigne+'</p>'+
-    '<div class="maze" style="--cols:'+C+'">'+cases.map(cl=>'<button type="button" class="cell'+(cl.type!=='op'?' mark':'')+'" data-k="'+cl.k+'">'+
-      (cl.type==='depart'?'Départ':cl.type==='arrivee'?'Arrivée':cl.a+' + '+cl.b)+'</button>').join('')+'</div>'+
+    '<div class="maze'+(trois?' trois':'')+'" style="--cols:'+C+'">'+cases.map(cl=>'<button type="button" class="cell'+(cl.type!=='op'?' mark':'')+'" data-k="'+cl.k+'">'+
+      (cl.type==='depart'?'Départ':cl.type==='arrivee'?'Arrivée':cl.n.join(' + '))+'</button>').join('')+'</div>'+
     '<div class="dnd-msg" id="msg" role="status" hidden></div>');
   majLaby();
   $$('.cell',main).forEach(b=>b.addEventListener('click',()=>labyTap(b)));
@@ -849,12 +897,13 @@ function labyTap(btn){
     setTimeout(finLaby,s.trace.length*80+600);
     return;
   }
-  if(cl.a+cl.b===10){s.trace.push(k);majLaby();message('ok',cl.a+' + '+cl.b+' = 10. Tu avances !');}
+  const somme=cl.n.reduce((x,y)=>x+y,0),txt=cl.n.join(' + ');
+  if(somme===10){s.trace.push(k);majLaby();message('ok',txt+' = 10. Tu avances !');}
   else{
-    s.err++;const t=cl.a+' + '+cl.b+' = '+(cl.a+cl.b);if(s.ko.indexOf(t)<0)s.ko.push(t);
+    s.err++;const t=txt+' = '+somme;if(s.ko.indexOf(t)<0)s.ko.push(t);
     btn.classList.remove('ko');void btn.offsetWidth;btn.classList.add('ko');
     setTimeout(()=>btn.classList.remove('ko'),1000);
-    message('ko',t+'. Ce n\u2019est pas 10. Pour faire 10 avec '+cl.a+', il faut '+(10-cl.a)+'.');
+    message('ko',t+'. Ce n\u2019est pas 10.'+(cl.n.length===2?' Pour faire 10 avec '+cl.n[0]+', il faut '+(10-cl.n[0])+'.':' Compte bien chaque nombre.'));
   }
 }
 function finLaby(){const s=S.sess;if(!s||!s.cases||!main.contains($('.maze',main)))return;
