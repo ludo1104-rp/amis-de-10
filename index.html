@@ -328,6 +328,7 @@ body.simple .choice.ok{border-color:#86CFA4} body.simple .choice.ko{border-color
 body.simple .sheet-ico{background:#86CFA4;color:#0A0A0A} body.simple .sheet.bad .sheet-ico{background:#F4A3B4}
 body.simple .sheet-btn,body.simple .sheet.bad .sheet-btn{background:#0A0A0A;color:#FFFFFF}
 body.simple .streak{background:var(--surface);color:var(--ink)}
+.marque{margin:0 0 4px;font-family:"Figtree","Avenir Next",Arial,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -530,7 +531,7 @@ $('#listenBtn').addEventListener('click',()=>{if(S.listen)S.listen();});
    ===================================================================== */
 function mentions(){
   const src=APP.sourceInternet?' à partir d\u2019un document Internet':(APP.sourceAutre?' '+APP.sourceAutre:'');
-  return '<div class="foot">Version '+esc(APP.version)+'<br>Application produite par IA'+esc(src)+'. Des erreurs peuvent survenir.<br>Application développée par Claude AI sous la supervision de Ludo<b style="font-weight:700;font-size:1.35em;line-height:0">.</b> (@rprof_1).<br>Licence <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" target="_blank" rel="noopener" style="color:inherit">CC BY-NC-SA 4.0</a>.</div>';}
+  return '<div class="foot">Version '+esc(APP.version)+'<br>Application produite par IA'+esc(src)+'. Des erreurs peuvent survenir.<br>Application développée par Claude AI sous la supervision de Ludo<b style="font-weight:700;font-size:1.35em;line-height:0">.</b> (@rprof_1) · <a href="https://rprof1.com" target="_blank" rel="noopener" style="color:inherit">rprof1.com</a>.<br>Licence <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" target="_blank" rel="noopener" style="color:inherit">CC BY-NC-SA 4.0</a>.</div>';}
 
 /* =====================================================================
    COMPOSANTS PRÊTS À L'EMPLOI — skill appli-eleve-ipad
@@ -662,7 +663,7 @@ function renderHome(){
       '<div class="sizes"><span class="small-label">Taille du texte</span><div class="size-pills">'+
       [['0.9','Petit'],['1','Moyen'],['1.15','Grand']].map(z=>'<button type="button" class="size-pill" data-z="'+z[0]+'" aria-pressed="'+(zoomLevel()===z[0])+'"><span style="font-size:'+(16*Number(z[0]))+'px">A</span> '+z[1]+'</button>').join('')+
     '</div></div></div>'+
-    '<div class="hero">'+ICONS.hero+'</div>'+
+    '<p class="marque">Ludo.</p>'+'<div class="hero">'+ICONS.hero+'</div>'+
     '<h1>'+esc(APP.titre)+'</h1>'+
     '<p class="lead">'+esc(APP.sousTitre)+'</p>'+
     '<div class="slines">'+ACCUEIL_LIGNES.map(l=>line(l[0],l[1])).join('')+'</div>'+
