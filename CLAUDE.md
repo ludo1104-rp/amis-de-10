@@ -20,7 +20,7 @@ orange = son ami (ce qui manque pour faire 10).
   en orange après la réponse, chemin du labyrinthe qui s'allume, anneau et
   étoiles du résultat. Coupées si l'iPad réduit les animations.
 - Source : aucun document de départ (« Application produite par IA »).
-- 24/10/2026 : logo « Ludo. » en haut de l'accueil + lien rprof1.com dans les mentions (publié le 24/10/2026).
+- 24/10/2026 : logo « Ludo. » tout en haut à gauche de l'accueil (déplacé le 24/10, non cliquable) + lien rprof1.com dans les mentions (publié le 24/10/2026).
 
 ## Fichiers
 - `index.html` : toute l'appli. Réglages `APP` et contenu en section 2.

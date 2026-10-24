@@ -332,12 +332,14 @@ body.simple .choice.ok{border-color:#86CFA4} body.simple .choice.ko{border-color
 body.simple .sheet-ico{background:#86CFA4;color:#0A0A0A} body.simple .sheet.bad .sheet-ico{background:#F4A3B4}
 body.simple .sheet-btn,body.simple .sheet.bad .sheet-btn{background:#0A0A0A;color:#FFFFFF}
 body.simple .streak{background:var(--surface);color:var(--ink)}
-.marque{margin:0 0 4px;font-family:"Figtree","Avenir Next",Arial,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--ink)}
+.top{position:relative}
+.marque{position:absolute;left:16px;top:50%;transform:translateY(-50%);margin:0;font-family:"Figtree","Avenir Next",Arial,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--ink);pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app">
   <header class="top">
+    <span id="topLogo" class="marque">Ludo.</span>
     <button id="homeBtn" class="round" type="button" aria-label="Accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.6v-6H9.6v6H5a1 1 0 0 1-1-1z" fill="currentColor"/></svg></button>
     <div id="topCenter"></div>
     <button id="listenBtn" class="round" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9c1.5 1.6 1.5 4.4 0 6M18.6 6.4c3 3.2 3 8 0 11.2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
@@ -531,6 +533,7 @@ const S={prenom:'',listen:null,sheetAction:null,sess:null};
 const main=$('#main'),sheet=$('#sheet');
 function header(o){o=o||{};
   $('#homeBtn').style.visibility=o.home===false?'hidden':'visible';
+  $('#topLogo').style.visibility=o.home===false?'visible':'hidden';
   S.listen=o.listen||null;$('#listenBtn').style.visibility=S.listen?'visible':'hidden';
   let c='';if(o.segs){c='<div class="segs">'+Array.from({length:o.segs[1]},(_,i)=>'<i class="'+(i<o.segs[0]?'on':'')+'"></i>').join('')+'</div>';
     if(o.streak>=2)c+='<span class="streak">'+ICONS.flamme+o.streak+'</span>';}
@@ -684,7 +687,7 @@ function renderHome(){
       '<div class="sizes"><span class="small-label">Taille du texte</span><div class="size-pills">'+
       [['0.9','Petit'],['1','Moyen'],['1.15','Grand']].map(z=>'<button type="button" class="size-pill" data-z="'+z[0]+'" aria-pressed="'+(zoomLevel()===z[0])+'"><span style="font-size:'+(16*Number(z[0]))+'px">A</span> '+z[1]+'</button>').join('')+
     '</div></div></div>'+
-    '<p class="marque">Ludo.</p>'+'<div class="hero">'+ICONS.hero+'</div>'+
+    '<div class="hero">'+ICONS.hero+'</div>'+
     '<h1>'+esc(APP.titre)+'</h1>'+
     '<p class="lead">'+esc(APP.sousTitre)+'</p>'+
     '<div class="slines">'+ACCUEIL_LIGNES.map(l=>line(l[0],l[1])).join('')+'</div>'+
