@@ -11,7 +11,7 @@ Appli pour iPad : apprendre les compléments à 10 (7 + 3 = 10) avec le cadre de
 - Mes calculs difficiles et Mes progrès (enregistrés sur l’appareil).
 - 3 défis, style Couleurs ou Simple, 3 tailles de texte. Tout est dans `index.html`, sans connexion.
 
-Version 1.0 — Application produite par IA. Des erreurs peuvent survenir.
+Version 1.1 — Application produite par IA. Des erreurs peuvent survenir.
 Application développée par Claude AI sous la supervision de Ludo (@rprof_1).
 
 ## Licence

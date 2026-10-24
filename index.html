@@ -15,7 +15,7 @@
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
-  --bg:#F7F8FB; --surface:#EEF1F6; --card:#FFFFFF; --ink:#1F2933; --muted:#6A7581; --line:#E0E5EC; --line-strong:#CDD5DF;
+  --bg:#F7F8FB; --surface:#EEF1F6; --card:#FFFFFF; --ink:#1F2933; --muted:#5F6A76; --line:#E0E5EC; --line-strong:#CDD5DF;
   --focus:#3B6FD8; --primary:#3B6FD8; --primary-ink:#FFFFFF;
   --ok:#22804A; --ok-bg:#E3F5E9; --ok-strong:#2FA05C;
   --bad:#B42A20; --bad-bg:#FCE7E5; --bad-strong:#D9473B;
@@ -897,7 +897,7 @@ function labyTap(btn){
     s.fini=true;s.trace.push(k);majLaby();$('#msg').hidden=true;
     /* Le chemin s'allume en vert, de proche en proche */
     s.trace.forEach((t,j)=>{const b=$('.cell[data-k="'+t+'"]',main);b.style.setProperty('--d',(j*80)+'ms');b.classList.remove('on');b.classList.add('win');});
-    setTimeout(finLaby,s.trace.length*80+600);
+    setTimeout(()=>finLaby(s),s.trace.length*80+600);
     return;
   }
   const somme=cl.n.reduce((x,y)=>x+y,0),txt=cl.n.join(' + ');
@@ -909,7 +909,8 @@ function labyTap(btn){
     message('ko',t+'. Ce n\u2019est pas 10.'+(cl.n.length===2?' Pour faire 10 avec '+cl.n[0]+', il faut '+(10-cl.n[0])+'.':' Compte bien chaque nombre.'));
   }
 }
-function finLaby(){const s=S.sess;if(!s||!s.cases||!main.contains($('.maze',main)))return;
+/* s = la partie qui vient de finir : si l'élève a relancé entre-temps, on ne montre rien */
+function finLaby(s){if(s!==S.sess||!s.cases||!main.contains($('.maze',main)))return;
   const n=s.trace.length-2;
   recap({pc:100,label:ICONS.trophee,etoiles:s.err===0,titre:s.err===0?'Bravo !':'Bien joué !',aRevoir:s.ko,rejouer:startLaby,
     ligne:'Tu as trouvé le chemin : '+pluriel(n,'calcul')+' qui font 10.'+(s.err?' '+pluriel(s.err,'erreur')+'.':'')});}
