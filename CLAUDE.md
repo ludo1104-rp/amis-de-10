@@ -9,7 +9,7 @@ orange = son ami (ce qui manque pour faire 10).
   l'artefact « Les compléments de 10 » (`_a-trier/artefacts/complements-de-10/`).
 - Jeux : Apprendre, Trouve l'ami, Les paires, Le labyrinthe, Mes calculs
   difficiles, Mes progrès. Ouverture animée, styles Couleurs/Simple, 3 tailles.
-- 1.1 (24/10/2026, pas encore publiée) : contenu enrichi, les élèves finissaient trop vite.
+- 1.1 publiée le 24/10/2026 : contenu enrichi, les élèves finissaient trop vite.
   Trouve l'ami : 12 / 15 / 20 questions ; calculs à trous variés (7 + ? = 10,
   ? + 7 = 10, 10 = 7 + ?, 10 − 7 = ?), 10 petites histoires (`HISTOIRES`,
   moyen et grand défi), 70 + ? = 100 au grand défi (`TYPES_COMP`).
@@ -35,5 +35,4 @@ orange = son ami (ce qui manque pour faire 10).
   × 3 parties de chaque jeu), à recréer depuis `test_parcours.py` de la skill.
 
 ## Prochaine étape
-- Publier la 1.1 quand Ludo dit « publie ».
 - Essai sur iPad : voix (Écouter), vrai doigt, webclip.
