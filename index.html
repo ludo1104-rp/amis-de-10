@@ -80,6 +80,10 @@ h1{font-size:clamp(30px,5vw,40px);line-height:1.15;letter-spacing:-.015em}
 /* ---------- Accueil ---------- */
 .hero{display:flex;justify-content:flex-start;margin:4px 0 -6px}
 .hero svg{width:min(240px,60%);height:auto}
+#reglBtn{position:absolute;right:76px;top:50%;transform:translateY(-50%)}
+#reglBtn svg{width:24px;height:24px}
+.mtitre{flex:1;margin:0;font-size:26px}
+.hero.petit svg{width:min(150px,40%)}
 .slines{display:flex;flex-direction:column;gap:10px}
 .sline{display:flex;align-items:center;gap:14px;font-size:20px;line-height:1.35;text-align:left}
 .sline .ic{flex:none;width:44px;height:44px;border-radius:50%;background:var(--p-lav);display:flex;align-items:center;justify-content:center}
@@ -342,6 +346,7 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
     <span id="topLogo" class="marque">Ludo.</span>
     <button id="homeBtn" class="round" type="button" aria-label="Accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.6v-6H9.6v6H5a1 1 0 0 1-1-1z" fill="currentColor"/></svg></button>
     <div id="topCenter"></div>
+    <button id="reglBtn" class="round" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="15" cy="7" r="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="9" cy="17" r="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></button>
     <button id="listenBtn" class="round" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9c1.5 1.6 1.5 4.4 0 6M18.6 6.4c3 3.2 3 8 0 11.2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
   </header>
   <main id="main"></main>
@@ -349,6 +354,12 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
     <div class="sheet-in">
       <div class="sheet-msg"><span class="sheet-ico" aria-hidden="true">✓</span><div><p class="sheet-title"></p><p class="sheet-sub"></p></div></div>
       <button type="button" class="sheet-btn" id="sheetBtn">Continuer</button>
+    </div>
+  </div>
+  <div class="modal" id="reglModal" role="dialog" aria-modal="true" aria-label="Réglages">
+    <div class="mbox">
+      <div class="mtop"><h2 class="mtitre">Réglages</h2><button class="round" type="button" id="reglClose" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button></div>
+      <div id="reglBody" class="reglages"></div>
     </div>
   </div>
   <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-label="Comment jouer ?">
@@ -534,6 +545,7 @@ const main=$('#main'),sheet=$('#sheet');
 function header(o){o=o||{};
   $('#homeBtn').style.visibility=o.home===false?'hidden':'visible';
   $('#topLogo').style.visibility=o.home===false?'visible':'hidden';
+  $('#reglBtn').style.display=o.home===false?'':'none';
   S.listen=o.listen||null;$('#listenBtn').style.visibility=S.listen?'visible':'hidden';
   let c='';if(o.segs){c='<div class="segs">'+Array.from({length:o.segs[1]},(_,i)=>'<i class="'+(i<o.segs[0]?'on':'')+'"></i>').join('')+'</div>';
     if(o.streak>=2)c+='<span class="streak">'+ICONS.flamme+o.streak+'</span>';}
@@ -682,15 +694,9 @@ const MODES={
 function renderHome(){
   header({home:false,listen:()=>say(APP.titre+'. '+ACCUEIL_LIGNES.map(l=>l[1]).join(' '))});
   const nd=difficilesC().length;
-  view('<div class="reglages">'+
-      '<div class="sizes"><span class="small-label">Style</span><div class="size-pills">'+[['couleurs','Couleurs'],['simple','Simple']].map(c=>'<button type="button" class="size-pill" data-sty="'+c[0]+'" aria-pressed="'+(styleActuel()===c[0])+'">'+c[1]+'</button>').join('')+'</div></div>'+
-      '<div class="sizes"><span class="small-label">Taille du texte</span><div class="size-pills">'+
-      [['0.9','Petit'],['1','Moyen'],['1.15','Grand']].map(z=>'<button type="button" class="size-pill" data-z="'+z[0]+'" aria-pressed="'+(zoomLevel()===z[0])+'"><span style="font-size:'+(16*Number(z[0]))+'px">A</span> '+z[1]+'</button>').join('')+
-    '</div></div></div>'+
-    '<div class="hero">'+ICONS.hero+'</div>'+
+  view('<div class="hero petit">'+ICONS.hero+'</div>'+
     '<h1>'+esc(APP.titre)+'</h1>'+
     '<p class="lead">'+esc(APP.sousTitre)+'</p>'+
-    '<div class="slines">'+ACCUEIL_LIGNES.map(l=>line(l[0],l[1])).join('')+'</div>'+
     htmlDefis()+
     '<div class="tiles">'+TUILES.map(t=>{
       const off=t[0]==='difficiles'&&!nd;
@@ -702,10 +708,22 @@ function renderHome(){
   $$('[data-mode]',main).forEach(b=>b.addEventListener('click',()=>MODES[b.dataset.mode]()));
   $('#helpBtn').addEventListener('click',openHelp);
   brancherDefis();
-  $$('[data-z]',main).forEach(b=>b.addEventListener('click',()=>{setZoom(b.dataset.z);$$('[data-z]',main).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));layout();}));
-  $$('[data-sty]',main).forEach(b=>b.addEventListener('click',()=>{setStyle(b.dataset.sty);$$('[data-sty]',main).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}));
-  marquerNouveau();
 }
+
+/* Réglages : style et taille du texte. Rangés dans une fenêtre pour garder l'accueil léger. */
+function pilules(cle,label,choix,actuel){return '<div class="sizes"><span class="small-label">'+label+'</span><div class="size-pills">'+
+  choix.map(c=>'<button type="button" class="size-pill" data-'+cle+'="'+c[0]+'" aria-pressed="'+(actuel===c[0])+'">'+c[1]+'</button>').join('')+'</div></div>';}
+function openRegl(){
+  const body=$('#reglBody');
+  body.innerHTML=pilules('sty','Style',[['couleurs','Couleurs'],['simple','Simple']],styleActuel())+
+    pilules('z','Taille du texte',[['0.9','<span style="font-size:14px">A</span> Petit'],['1','<span style="font-size:16px">A</span> Moyen'],['1.15','<span style="font-size:18px">A</span> Grand']],zoomLevel());
+  const choisir=(cle,fn)=>$$('[data-'+cle+']',body).forEach(b=>b.addEventListener('click',()=>{fn(b.dataset[cle]);$$('[data-'+cle+']',body).forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}));
+  choisir('sty',setStyle);choisir('z',z=>{setZoom(z);layout();});
+  marquerNouveau();
+  $('#reglModal').classList.add('on');}
+$('#reglBtn').addEventListener('click',openRegl);
+$('#reglClose').addEventListener('click',()=>$('#reglModal').classList.remove('on'));
+$('#reglModal').addEventListener('click',e=>{if(e.target.id==='reglModal')e.target.classList.remove('on');});
 
 /* ---------- Apprendre : toucher un calcul, le cadre de 10 se remplit ---------- */
 let LECON=7;
