@@ -91,6 +91,7 @@ h1{font-size:clamp(30px,5vw,40px);line-height:1.15;letter-spacing:-.015em}
 .field{display:flex;flex-direction:column;gap:8px;font-size:16px;color:var(--muted)}
 .field input{max-width:360px;min-height:54px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:20px Arial,Helvetica,sans-serif}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.wrap:has(>.tiles){max-width:1000px}
 .tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;min-height:156px;padding:18px;border-radius:26px;border:0;background:var(--c,var(--p-blue));color:var(--tile-ink);transition:transform .12s}
 .tile:active{transform:scale(.97)}
 .tile .ico{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center}
@@ -975,9 +976,14 @@ mb.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches
    Calculer les tailles d'après l'espace RÉELLEMENT disponible (clientWidth/Height),
    jamais d'après une estimation. Compléter ici pour les plateaux, grilles, etc.
    ===================================================================== */
+/* Tuiles de l'accueil : toutes sur une ligne si elles ont la place, sinon sur deux lignes */
+function rangerTuiles(){$$('.tiles',main).forEach(g=>{const n=g.children.length,w=g.clientWidth,larg=c=>(w-14*(c-1))/c;
+  let c=n;if(larg(c)<200)c=Math.ceil(n/2);if(larg(c)<150)c=Math.min(2,n);
+  g.style.gridTemplateColumns='repeat('+c+',minmax(0,1fr))';});}
 function layout(){
   const W=innerWidth,H=innerHeight;
   document.body.classList.toggle('portrait',H>W*1.05);
+  rangerTuiles();
   /* Exemple : const zone=$('.zone'); if(zone){const c=Math.floor(Math.min(zone.clientWidth/10,zone.clientHeight/8));document.documentElement.style.setProperty('--cell',c+'px');} */
 }
 let lt=null;const ro=new ResizeObserver(()=>{cancelAnimationFrame(lt);lt=requestAnimationFrame(layout);});
