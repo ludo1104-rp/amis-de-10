@@ -40,4 +40,4 @@ orange = son ami (ce qui manque pour faire 10).
 - 26/10/2026 : vérification du contenu par DeepSeek Pro (`VERIFICATION-CONTENU.md`) : aucune erreur trouvée. Ludo pense en avoir vu : lui demander lesquelles.
 - Essai sur iPad : voix (Écouter), vrai doigt, webclip.
 
-- 28/10/2026 (publié) : accueil allégé comme la Foire de Liège. Style et taille du texte rangés dans « Réglages » (bouton à côté du haut-parleur, `openRegl()`).
+- 28/10/2026 (publié) : accueil allégé comme la Foire de Liège. Style et taille du texte rangés dans « Réglages » (bouton à côté du haut-parleur, `openRegl()`). Tuiles sur 1 ou 2 lignes (`rangerTuiles()`).
