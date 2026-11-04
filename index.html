@@ -82,6 +82,8 @@ h1{font-size:clamp(30px,5vw,40px);line-height:1.15;letter-spacing:-.015em}
 .hero svg{width:min(240px,60%);height:auto}
 #reglBtn{position:absolute;right:76px;top:50%;transform:translateY(-50%)}
 #reglBtn svg{width:24px;height:24px}
+#qrBtn{position:absolute;right:136px;top:50%;transform:translateY(-50%)}
+#qrBtn svg{width:24px;height:24px}
 .mtitre{flex:1;margin:0;font-size:26px}
 .hero.petit svg{width:min(150px,40%)}
 .slines{display:flex;flex-direction:column;gap:10px}
@@ -158,6 +160,13 @@ h1{font-size:clamp(30px,5vw,40px);line-height:1.15;letter-spacing:-.015em}
 /* ---------- Aide pas-à-pas ---------- */
 .modal{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(31,41,51,.28)}
 .modal.on{display:flex}
+/* QR code de partage : grand, noir sur blanc, lisible au TVI */
+.mbox.qr-box{width:min(760px,100%);align-items:center;text-align:center}
+.qr-box .mtop,#qrBody{width:100%}
+#qrBody{display:flex;flex-direction:column;align-items:center;gap:12px}
+.qr-image{width:min(62vh,100%);aspect-ratio:1;background:#fff;border-radius:16px}
+.qr-image svg{display:block;width:100%;height:100%}
+.qr-lien{margin:0;font-size:18px;color:var(--muted);word-break:break-all}
 .mbox{zoom:var(--z,1);width:min(620px,100%);max-height:calc(100% / var(--z,1));overflow:auto;background:var(--card);border-radius:28px;padding:22px;display:flex;flex-direction:column;gap:16px}
 .mtop{display:flex;align-items:center;gap:12px}
 .mtop .segs{flex:1}
@@ -347,6 +356,7 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
     <span id="topLogo" class="marque">Ludo.</span>
     <button id="homeBtn" class="round" type="button" aria-label="Accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.6v-6H9.6v6H5a1 1 0 0 1-1-1z" fill="currentColor"/></svg></button>
     <div id="topCenter"></div>
+    <button id="qrBtn" class="round" type="button" aria-label="QR code de l’appli"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 18.5h2v1.5h-2zM18.5 14H20v2h-1.5z" fill="currentColor"/></svg></button>
     <button id="reglBtn" class="round" type="button" aria-label="Réglages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="15" cy="7" r="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="9" cy="17" r="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></button>
     <button id="listenBtn" class="round" type="button" aria-label="Écouter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9c1.5 1.6 1.5 4.4 0 6M18.6 6.4c3 3.2 3 8 0 11.2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
   </header>
@@ -355,6 +365,12 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
     <div class="sheet-in">
       <div class="sheet-msg"><span class="sheet-ico" aria-hidden="true">✓</span><div><p class="sheet-title"></p><p class="sheet-sub"></p></div></div>
       <button type="button" class="sheet-btn" id="sheetBtn">Continuer</button>
+    </div>
+  </div>
+  <div class="modal" id="qrModal" role="dialog" aria-modal="true" aria-label="QR code de l’appli">
+    <div class="mbox qr-box">
+      <div class="mtop"><h2 class="mtitre">Scanne pour ouvrir l’appli</h2><button class="round" type="button" id="qrClose" aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button></div>
+      <div id="qrBody"></div>
     </div>
   </div>
   <div class="modal" id="reglModal" role="dialog" aria-modal="true" aria-label="Réglages">
@@ -382,9 +398,10 @@ body.simple .streak{background:var(--surface);color:var(--ink)}
 const APP={
   titre:'Les amis de 10',
   sousTitre:'Deux nombres qui font 10 ensemble.',
-  version:'1.1',                     // +0.1 à chaque publication
+  version:'1.2',                     // +0.1 à chaque publication
   sourceInternet:false,              // pas de document de départ
   sourceAutre:'',
+  lien:'https://ludo1104-rp.github.io/amis-de-10/', // adresse publiée, pour le QR code
   cle:'amis-de-10'                   // préfixe localStorage — NE PLUS LE CHANGER après la 1re publication
 };
 
@@ -546,7 +563,7 @@ const main=$('#main'),sheet=$('#sheet');
 function header(o){o=o||{};
   $('#homeBtn').style.visibility=o.home===false?'hidden':'visible';
   $('#topLogo').style.visibility=o.home===false?'visible':'hidden';
-  $('#reglBtn').style.display=o.home===false?'':'none';
+  $('#reglBtn').style.display=$('#qrBtn').style.display=o.home===false?'':'none';
   S.listen=o.listen||null;$('#listenBtn').style.visibility=S.listen?'visible':'hidden';
   let c='';if(o.segs){c='<div class="segs">'+Array.from({length:o.segs[1]},(_,i)=>'<i class="'+(i<o.segs[0]?'on':'')+'"></i>').join('')+'</div>';
     if(o.streak>=2)c+='<span class="streak">'+ICONS.flamme+o.streak+'</span>';}
@@ -722,7 +739,83 @@ function openRegl(){
   choisir('sty',setStyle);choisir('z',z=>{setZoom(z);layout();});
   marquerNouveau();
   $('#reglModal').classList.add('on');}
+/* ---------- QR code de partage (accueil) ----------
+   Encodeur QR autonome (mode octet, correction M, versions 1 à 9),
+   repris de boite-outils-prof/generateur-qr. Fonctionne hors ligne.
+   qrSVG(texte) renvoie un dessin SVG noir sur blanc, avec la marge blanche. */
+const QRP=(()=>{
+  const ECC=[-1,10,16,26,18,24,16,18,22,22,26],BLOCS=[-1,1,1,1,2,2,4,4,4,5,5];
+  const brut=v=>{let r=(16*v+128)*v+64;if(v>=2){const a=Math.floor(v/7)+2;r-=(25*a-10)*a-55;if(v>=7)r-=36;}return r;};
+  const donnees=v=>Math.floor(brut(v)/8)-ECC[v]*BLOCS[v];
+  const align=v=>{if(v===1)return[];const nb=Math.floor(v/7)+2,pas=Math.ceil((v*4+4)/(nb*2-2))*2,res=[6];for(let p=v*4+10;res.length<nb;p-=pas)res.splice(1,0,p);return res;};
+  const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11d);z^=((y>>>i)&1)*x;}return z&255;};
+  const diviseur=d=>{const r=new Array(d).fill(0);r[d-1]=1;let x=1;for(let i=0;i<d;i++){for(let j=0;j<d;j++){r[j]=mul(r[j],x);if(j+1<d)r[j]^=r[j+1];}x=mul(x,2);}return r;};
+  const reste=(dat,div)=>{const r=new Array(div.length).fill(0);for(const b of dat){const f=b^r.shift();r.push(0);div.forEach((c,i)=>{r[i]^=mul(c,f);});}return r;};
+  const MASQUES=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,x=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>(x*y)%2+(x*y)%3===0,(x,y)=>((x*y)%2+(x*y)%3)%2===0,(x,y)=>((x+y)%2+(x*y)%3)%2===0];
+  function encoder(texte){
+    const oct=Array.from(new TextEncoder().encode(texte));
+    let v=0,cap=0;
+    for(let k=1;k<=9;k++){cap=donnees(k)*8;if(12+oct.length*8<=cap){v=k;break;}}
+    if(!v)return null;
+    const bits=[],aj=(val,n)=>{for(let i=n-1;i>=0;i--)bits.push((val>>>i)&1);};
+    aj(4,4);aj(oct.length,8);oct.forEach(o=>aj(o,8));
+    aj(0,Math.min(4,cap-bits.length));aj(0,(8-bits.length%8)%8);
+    const dat=[];for(let i=0;i<bits.length;i+=8){let o=0;for(let j=0;j<8;j++)o=(o<<1)|bits[i+j];dat.push(o);}
+    for(let p=0xec;dat.length*8<cap;p^=0xec^0x11)dat.push(p);
+    const nb=BLOCS[v],ecc=ECC[v],total=Math.floor(brut(v)/8),courts=nb-total%nb,lc=Math.floor(total/nb),div=diviseur(ecc),blocs=[];
+    for(let i=0,k=0;i<nb;i++){const n=lc-ecc+(i<courts?0:1),d=dat.slice(k,k+n);k+=n;const c=reste(d,div);if(i<courts)d.push(null);blocs.push(d.concat(c));}
+    const mots=[];for(let i=0;i<blocs[0].length;i++)for(const b of blocs)if(b[i]!==null)mots.push(b[i]);
+    const n=v*4+17,mod=Array.from({length:n},()=>new Array(n).fill(false)),fonc=Array.from({length:n},()=>new Array(n).fill(false));
+    const pos=(x,y,b)=>{mod[y][x]=b;fonc[y][x]=true;};
+    for(let i=0;i<n;i++){pos(6,i,i%2===0);pos(i,6,i%2===0);}
+    for(const[cx,cy]of[[3,3],[n-4,3],[3,n-4]])for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const x=cx+dx,y=cy+dy,d=Math.max(Math.abs(dx),Math.abs(dy));if(x>=0&&x<n&&y>=0&&y<n)pos(x,y,d!==2&&d!==4);}
+    const al=align(v),der=al.length-1;
+    al.forEach((a,i)=>al.forEach((b,j)=>{if((i===0&&j===0)||(i===0&&j===der)||(i===der&&j===0))return;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)pos(a+dx,b+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1);}));
+    const format=m=>{const d=m;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const fb=((d<<10)|r)^0x5412,b=i=>((fb>>>i)&1)===1;
+      for(let i=0;i<6;i++)pos(8,i,b(i));pos(8,7,b(6));pos(8,8,b(7));pos(7,8,b(8));for(let i=9;i<15;i++)pos(14-i,8,b(i));
+      for(let i=0;i<8;i++)pos(n-1-i,8,b(i));for(let i=8;i<15;i++)pos(8,n-15+i,b(i));pos(8,n-8,true);};
+    format(0);
+    if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1f25);const vb=(v<<12)|r;for(let i=0;i<18;i++){const b=((vb>>>i)&1)===1,a=n-11+i%3,c=Math.floor(i/3);pos(a,c,b);pos(c,a,b);}}
+    let i=0;
+    for(let dr=n-1;dr>=1;dr-=2){if(dr===6)dr=5;for(let ve=0;ve<n;ve++)for(let j=0;j<2;j++){const x=dr-j,y=((dr+1)&2)===0?n-1-ve:ve;if(!fonc[y][x]&&i<mots.length*8){mod[y][x]=((mots[i>>>3]>>>(7-(i&7)))&1)===1;i++;}}}
+    const app=m=>{for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!fonc[y][x]&&MASQUES[m](x,y))mod[y][x]=!mod[y][x];};
+    const pen=()=>{let p=0;const serie=g=>{for(let a=0;a<n;a++){let s=1;for(let b=1;b<n;b++){if(g(a,b)===g(a,b-1))s++;else{if(s>=5)p+=s-2;s=1;}}if(s>=5)p+=s-2;}};
+      serie((a,b)=>mod[a][b]);serie((a,b)=>mod[b][a]);let so=0;
+      for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(mod[y][x])so++;if(y<n-1&&x<n-1){const c=mod[y][x];if(c===mod[y][x+1]&&c===mod[y+1][x]&&c===mod[y+1][x+1])p+=3;}}
+      return p+Math.floor(Math.abs(so*20-n*n*10)/(n*n))*10;};
+    let best=0,score=Infinity;
+    for(let m=0;m<8;m++){app(m);format(m);const s=pen();if(s<score){best=m;score=s;}app(m);}
+    app(best);format(best);
+    return{n,mod};
+  }
+  return{encoder};
+})();
+function qrSVG(texte){
+  const q=QRP.encoder(texte);if(!q)return'';
+  const n=q.n,t=n+8,dans=(x,y)=>(x<7&&y<7)||(x>=n-7&&y<7)||(x<7&&y>=n-7);
+  // Points arrondis (sauf les trois grands carrés des coins, dessinés à part)
+  let d='';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(q.mod[y][x]&&!dans(x,y))d+='<rect x="'+(x+4.06)+'" y="'+(y+4.06)+'" width=".88" height=".88" rx=".32"/>';
+  // Grands carrés des coins : anneau arrondi + carré central arrondi
+  for(const[a,b]of[[4,4],[n-3,4],[4,n-3]])
+    d+='<rect x="'+(a+.5)+'" y="'+(b+.5)+'" width="6" height="6" rx="1.9" fill="none" stroke="#000"/>'+
+       '<rect x="'+(a+2)+'" y="'+(b+2)+'" width="3" height="3" rx=".9"/>';
+  return'<svg viewBox="0 0 '+t+' '+t+'" role="img" aria-label="QR code"><rect width="'+t+'" height="'+t+'" fill="#fff"/><g fill="#000">'+d+'</g></svg>';
+}
+/* Adresse partagée : celle de la page en ligne (sans #, sans ?).
+   Ouverte depuis un fichier sur le Mac, on prend APP.lien (adresse publiée). */
+function adressePartage(){
+  return /^https?:$/.test(location.protocol)?location.origin+location.pathname:(APP.lien||'');}
+function openQR(){
+  const url=adressePartage();
+  $('#qrBody').innerHTML=url?'<div class="qr-image">'+qrSVG(url)+'</div><p class="qr-lien">'+esc(url.replace(/^https?:\/\//,''))+'</p>'
+    :'<p>Publie d’abord l’appli pour avoir son QR code.</p>';
+  $('#qrModal').classList.add('on');}
+$('#qrClose').addEventListener('click',()=>$('#qrModal').classList.remove('on'));
+$('#qrModal').addEventListener('click',e=>{if(e.target.id==='qrModal')e.target.classList.remove('on');});
+addEventListener('keydown',e=>{if(e.code==='Escape')$('#qrModal').classList.remove('on');});
 $('#reglBtn').addEventListener('click',openRegl);
+$('#qrBtn').addEventListener('click',openQR);
 $('#reglClose').addEventListener('click',()=>$('#reglModal').classList.remove('on'));
 $('#reglModal').addEventListener('click',e=>{if(e.target.id==='reglModal')e.target.classList.remove('on');});
 
